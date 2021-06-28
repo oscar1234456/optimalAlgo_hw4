@@ -1,0 +1,76 @@
+searchAgentsNum = 50; %The Max number of the whales
+Max_Iteration = 50; %The Max number of iterations
+b = 1; %The constant of exp function (Spiral)
+
+dim = 2; %The dimension of the problem
+
+ub = 600; %The upper(&lower) bound of the problem
+lb = -600;
+
+FitnessBest = 99999999; %record the best fitness
+
+result = [];
+
+%------Initialize the Whales-------
+whalesPositions = rand(searchAgentsNum, dim).*(ub-lb)+lb; 
+
+
+for i=1:size(whalesPositions,1)
+    count = 0;
+    x1 = whalesPositions(i,1);
+    x2 = whalesPositions(i,2);
+    fitness = (((x1^2) + (x2^2))/4000) - (cos(x1)*cos((x2)/sqrt(2)))+1; %Fitness Function
+    if fitness < FitnessBest
+        FitnessBest = fitness;  %update now best fitness value
+        BestSearchAgent = whalesPositions(i,:);
+    end
+end
+
+for t=1:Max_Iteration
+    a = 2-(t-1)*((2)/Max_Iteration); %Caculate a (linearly descend)
+    for i=1:size(whalesPositions,1)
+        r1 = rand();
+        r2 = rand();
+        
+        A = 2*a*r1-a;
+        C = 2*r2;
+       
+        l = (a)*rand-1; %The coefficient of exp function
+        p = rand();
+        
+        if p<0.5
+            if abs(A)>=1
+                randomSearchAgentIndex = floor(searchAgentsNum*rand()+1);
+                randomSearchAgent = whalesPositions(randomSearchAgentIndex,:);
+                D_X_rand = abs((C*randomSearchAgent) - whalesPositions(i,:));
+                whalesPositions(i,:) = randomSearchAgent - (A*D_X_rand);
+            elseif abs(A)<1
+                D_Leader = abs(C*BestSearchAgent - whalesPositions(i,:));
+                whalesPositions(i,:) = BestSearchAgent - A*D_Leader;
+            end
+        elseif p>=0.5
+            distance2Leader = abs(BestSearchAgent-whalesPositions(i,:));
+            whalesPositions(i,:) = distance2Leader*exp(b*l)*cos(2*pi*l)+BestSearchAgent;
+        end    
+    end
+    for m=1:size(whalesPositions,1)
+%     count = 0;
+%         for y=1:size(Positions,2)
+%             count = count+(Positions(m,y)^2); 
+%         end
+        x1 = whalesPositions(m,1);
+        x2 = whalesPositions(m,2);
+        fitness = (((x1^2) + (x2^2))/4000) - (cos(x1)*cos((x2)/sqrt(2)))+1;
+        if fitness < FitnessBest
+            FitnessBest = fitness;
+            BestSearchAgent = whalesPositions(m,:);
+        end
+    end
+    result(t) = FitnessBest;
+end
+nexttile
+title('每代染色體Fitness最大值')
+plot(1:Max_Iteration, result);
+xlabel('Generation') 
+ylabel('min Fitness') 
+
